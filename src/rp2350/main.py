@@ -42,8 +42,11 @@ SBUS_FRAME_LEN  = 25
 SBUS_STARTBYTE  = 0x0F
 SBUS_ENDBYTE    = 0x00
 
-# LED for status feedback
-led = Pin(25, Pin.OUT)  # onboard LED
+# LED for status feedback (Pico W uses "LED" string, Pico 2 uses Pin(25))
+try:
+    led = Pin("LED", Pin.OUT)  # Pico W
+except TypeError:
+    led = Pin(25, Pin.OUT)     # Pico 2 / standard Pico
 
 
 def decode_channels(frame: bytes) -> list:
