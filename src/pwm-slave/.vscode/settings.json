@@ -1,0 +1,4 @@
+{
+    "cortex-debug.armToolchainPath": "c:\\Users\\bulli\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\arm-none-eabi-gcc\\15.2.1-1.1.1\\.content\\bin",
+    "cortex-debug.openocdPath": "c:\\Users\\bulli\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\openocd\\0.12.0-7.1\\.content\\bin\\openocd.EXE"
+}
