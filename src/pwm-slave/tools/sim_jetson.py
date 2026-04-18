@@ -29,8 +29,10 @@ import serial
 PORT = "COM4"      # default; Device Manager -> STLink Virtual COM Port (COMx)
 BAUD = 115200
 RATE_HZ = 50
-SWEEP_HZ = 0.5     # one full CH1 sine period every 2 seconds
-AMPL = 800         # stays well inside SBUS 0..2047 around center 1024
+
+# Servo test positions: fully retracted → mid → fully extended → mid
+SERVO_POSITIONS = [300, 600, 1600, 600]  # matches linear servo specs
+HOLD_TIME_SEC = 5.0  # seconds to hold each position
 
 
 def crc8_dallas(data: bytes) -> int:
@@ -53,21 +55,34 @@ def build_frame(ch1: int, ch2: int, ch3: int, ch4: int) -> bytes:
 def main() -> None:
     port = sys.argv[1] if len(sys.argv) > 1 else PORT
     ser = serial.Serial(port, BAUD, timeout=0)
-    print(f"sending to {port} @ {BAUD} baud, {RATE_HZ} Hz (Ctrl+C to stop)")
+    print(f"sending to {port} @ {BAUD} baud, {RATE_HZ} Hz")
+    print("servo test sequence: retracted(300) → mid(600) → extended(1600) → mid(600)")
+    print("Ctrl+C to stop")
 
     period = 1.0 / RATE_HZ
     t0 = time.time()
     next_tick = t0
     frames = 0
+    position_idx = 0
+    last_position_change = t0
+
     try:
         while True:
             t = time.time() - t0
-            ch1 = 1024 + int(AMPL * math.sin(2 * math.pi * SWEEP_HZ * t))
+
+            # Change position every HOLD_TIME_SEC seconds
+            if (t - (last_position_change - t0)) >= HOLD_TIME_SEC:
+                position_idx = (position_idx + 1) % len(SERVO_POSITIONS)
+                last_position_change = time.time()
+                print(f"t={t:6.1f}s  switching to position {SERVO_POSITIONS[position_idx]} " +
+                      f"({'retracted' if SERVO_POSITIONS[position_idx] == 300 else
+                          'mid' if SERVO_POSITIONS[position_idx] == 600 else 'extended'})")
+
+            ch1 = SERVO_POSITIONS[position_idx]
             frame = build_frame(ch1, 1024, 1024, 1024)
             ser.write(frame)
             frames += 1
-            if frames % RATE_HZ == 0:
-                print(f"t={t:6.2f}s  ch1={ch1}")
+
             next_tick += period
             sleep_for = next_tick - time.time()
             if sleep_for > 0:
