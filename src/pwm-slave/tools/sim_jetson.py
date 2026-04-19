@@ -56,7 +56,7 @@ def main() -> None:
     port = sys.argv[1] if len(sys.argv) > 1 else PORT
     ser = serial.Serial(port, BAUD, timeout=0)
     print(f"sending to {port} @ {BAUD} baud, {RATE_HZ} Hz")
-    print("servo test sequence: retracted(300) → mid(600) → extended(1600) → mid(600)")
+    print("servo test sequence: retracextendedted(300) → mid(600) → extended(1600) → mid(600)")
     print("Ctrl+C to stop")
 
     period = 1.0 / RATE_HZ

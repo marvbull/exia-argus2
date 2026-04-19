@@ -134,13 +134,13 @@ OPENOCD ?= openocd
 # CFLAGS
 #######################################
 # cpu
-CPU = 
+CPU = -mcpu=cortex-m4
 
 # fpu
-FPU = 
+FPU = -mfpu=fpv4-sp-d16
 
 # float-abi
-FLOAT-ABI = 
+FLOAT-ABI = -mfloat-abi=hard
 
 # mcu
 MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
@@ -191,7 +191,7 @@ CXXFLAGS += $(ASSEMBLER_LIST_OUTPUT_FLAG)
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = 
+LDSCRIPT = STM32F401RETx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm 
