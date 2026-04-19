@@ -64,16 +64,16 @@ def sbus_to_split_control(sbus_val: int, current_servo: int) -> Tuple[int, int, 
     if clamped < SPLIT_POINT_SBUS:
         # Stick up: brake control, gas off
         brake_range = SERVO_BRAKE_RELEASED - SERVO_BRAKE_ENGAGED
-        # Map SBUS_MIN..SPLIT_POINT_SBUS to SERVO_BRAKE_ENGAGED..SERVO_BRAKE_RELEASED
-        servo_val = SERVO_BRAKE_ENGAGED + int((clamped - SBUS_MIN) / (SPLIT_POINT_SBUS - SBUS_MIN) * brake_range)
+        # Map full SBUS_MIN..SBUS_MAX to SERVO_BRAKE_ENGAGED..SERVO_BRAKE_RELEASED
+        servo_val = SERVO_BRAKE_ENGAGED + int((clamped - SBUS_MIN) / (SBUS_MAX - SBUS_MIN) * brake_range)
         gas_val = RC_FAILSAFE_GAS
         mode = "BRAKE"
         return (servo_val, gas_val, mode)
     else:
         # Stick down: gas control, servo HOLDS current position
         gas_range = 1200 - RC_MIN  # 1200 - 300 = 900
-        # Map SPLIT_POINT_SBUS..SBUS_MAX to RC_MIN..1200
-        gas_val = RC_MIN + int((clamped - SPLIT_POINT_SBUS) / (SBUS_MAX - SPLIT_POINT_SBUS) * gas_range)
+        # Map full SBUS_MIN..SBUS_MAX to RC_MIN..1200
+        gas_val = RC_MIN + int((clamped - SBUS_MIN) / (SBUS_MAX - SBUS_MIN) * gas_range)
 
         # Hold servo at current position (don't move it during gas mode)
         servo_val = current_servo
