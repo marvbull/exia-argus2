@@ -244,25 +244,25 @@ static void update_servo_pwm(uint16_t ch1_value) {
     if (ch1_value < 300) {
  80002dc:	f5b0 7f96 	cmp.w	r0, #300	@ 0x12c
  80002e0:	d311      	bcc.n	8000306 <update_servo_pwm+0x2a>
-        pulse_us = PWM_RETRACTED_US;  /* clamp low */
+        pulse_us = 1100;  /* clamp low → retracted */
     } else if (ch1_value > 1600) {
  80002e2:	f5b0 6fc8 	cmp.w	r0, #1600	@ 0x640
  80002e6:	d81c      	bhi.n	8000322 <update_servo_pwm+0x46>
-        pulse_us = PWM_EXTENDED_US;   /* clamp high */
+        pulse_us = 1900;  /* clamp high → extended */
     } else {
-        /* Linear interpolation: higher ch1 → lower pulse_us */
-        pulse_us = PWM_RETRACTED_US - ((ch1_value - 300) * (PWM_RETRACTED_US - PWM_EXTENDED_US)) / (1600 - 300);
+        /* Linear interpolation: higher ch1 → longer pulse_us */
+        pulse_us = 1100 + ((ch1_value - 300) * (1900 - 1100)) / (1600 - 300);
  80002e8:	f5a0 7096 	sub.w	r0, r0, #300	@ 0x12c
  80002ec:	f44f 7348 	mov.w	r3, #800	@ 0x320
  80002f0:	fb03 f000 	mul.w	r0, r3, r0
  80002f4:	4a0c      	ldr	r2, [pc, #48]	@ (8000328 <update_servo_pwm+0x4c>)
  80002f6:	fb82 3200 	smull	r3, r2, r2, r0
  80002fa:	17c3      	asrs	r3, r0, #31
- 80002fc:	eba3 2362 	sub.w	r3, r3, r2, asr #9
- 8000300:	f203 736c 	addw	r3, r3, #1900	@ 0x76c
+ 80002fc:	ebc3 2362 	rsb	r3, r3, r2, asr #9
+ 8000300:	f203 434c 	addw	r3, r3, #1100	@ 0x44c
  8000304:	e001      	b.n	800030a <update_servo_pwm+0x2e>
-        pulse_us = PWM_RETRACTED_US;  /* clamp low */
- 8000306:	f240 736c 	movw	r3, #1900	@ 0x76c
+        pulse_us = 1100;  /* clamp low → retracted */
+ 8000306:	f240 434c 	movw	r3, #1100	@ 0x44c
     }
 
     /* Convert µs to timer counts: pulse_us * (PWM_MAX_CCR + 1) / PWM_PERIOD_US */
@@ -279,8 +279,8 @@ static void update_servo_pwm(uint16_t ch1_value) {
  800031e:	6353      	str	r3, [r2, #52]	@ 0x34
 }
  8000320:	4770      	bx	lr
-        pulse_us = PWM_EXTENDED_US;   /* clamp high */
- 8000322:	f240 434c 	movw	r3, #1100	@ 0x44c
+        pulse_us = 1900;  /* clamp high → extended */
+ 8000322:	f240 736c 	movw	r3, #1900	@ 0x76c
  8000326:	e7f0      	b.n	800030a <update_servo_pwm+0x2e>
  8000328:	64d319ff 	.word	0x64d319ff
  800032c:	d1b71759 	.word	0xd1b71759

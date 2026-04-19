@@ -31,7 +31,7 @@ BAUD = 115200
 RATE_HZ = 50
 
 # Servo test positions: fully retracted → mid → fully extended → mid
-SERVO_POSITIONS = [300, 600, 1600, 600]  # matches linear servo specs
+SERVO_POSITIONS = [300, 1100, 1600, 600]  # matches linear servo specs
 HOLD_TIME_SEC = 5.0  # seconds to hold each position
 
 
