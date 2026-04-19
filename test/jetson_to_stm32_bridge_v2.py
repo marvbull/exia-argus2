@@ -37,48 +37,41 @@ STM32_RATE_HZ = 50
 FRAME_SYNC = [0xAA, 0x55]
 
 # Split-channel mapping - ADJUSTABLE SETTINGS
-SPLIT_POINT_SBUS = 992        # gas/brake boundary in SBUS values (adjust this!)
-RC_MIN = 300
-RC_MAX = 1600
-RC_FAILSAFE_SERVO = 600       # servo failsafe (mid position)
-RC_FAILSAFE_GAS = 300         # gas failsafe (off)
+SPLIT_POINT_SBUS = 1173        # CH3 stick boundary: below = BRAKE, above = GAS
 
-# SERVO POSITION SETTINGS - adjust these for your brake setup
-SERVO_BRAKE_RELEASED = 1600   # servo fully extended (brake off)
-SERVO_BRAKE_ENGAGED = 1200    # servo retracted (brake on)
-SERVO_HOLD_DEADBAND = 20      # ±20 units around hold position (prevents jitter)
+# Servo (CH1) settings — values are PWM µs, sent directly to STM32
+SERVO_BRAKE_RELEASED = 1700   # brake OFF  → 1700µs PWM
+SERVO_BRAKE_ENGAGED  = 1900   # brake ON   → 1900µs PWM (fully retracted)
+SERVO_HOLD_DEADBAND  = 10     # ±units, suppresses jitter when holding position
+
+# Gas (CH2) settings
+GAS_MIN = 300                 # gas off (motor idle)
+GAS_MAX = 1200                # gas full throttle
+
+# Failsafe values sent on SBUS timeout / invalid frame
+RC_FAILSAFE_SERVO = 1900
+RC_FAILSAFE_GAS   = 300
 
 
 def sbus_to_split_control(sbus_val: int, current_servo: int) -> Tuple[int, int, str]:
     """
-    Map CH3 SBUS value to servo + gas control with position hold.
+    Map CH3 SBUS value to (servo_value, gas_value, mode).
 
-    INVERTED LOGIC (stick down = higher SBUS values):
-    SBUS < SPLIT_POINT_SBUS: BRAKE control, gas off
-    SBUS > SPLIT_POINT_SBUS: GAS control, servo HOLD
-
-    Returns: (servo_value, gas_value, mode)
+    Stick UP   (SBUS 172..1173):  GAS mode   — gas 1200..300, servo holds
+    Stick DOWN (SBUS 1173..1811): BRAKE mode — servo 1700..1900µs, gas off
     """
     clamped = max(SBUS_MIN, min(SBUS_MAX, sbus_val))
 
-    if clamped < SPLIT_POINT_SBUS:
-        # Stick up: brake control, gas off
-        brake_range = SERVO_BRAKE_RELEASED - SERVO_BRAKE_ENGAGED
-        # Map full SBUS_MIN..SBUS_MAX to SERVO_BRAKE_ENGAGED..SERVO_BRAKE_RELEASED
-        servo_val = SERVO_BRAKE_ENGAGED + int((clamped - SBUS_MIN) / (SBUS_MAX - SBUS_MIN) * brake_range)
-        gas_val = RC_FAILSAFE_GAS
-        mode = "BRAKE"
-        return (servo_val, gas_val, mode)
+    if clamped <= SPLIT_POINT_SBUS:
+        # Stick UP (SBUS 172..1173): GAS mode, servo holds
+        t = (clamped - SBUS_MIN) / (SPLIT_POINT_SBUS - SBUS_MIN)
+        gas_val = GAS_MAX - int(t * (GAS_MAX - GAS_MIN))  # 172→full, 1173→off
+        return (current_servo, gas_val, "GAS")
     else:
-        # Stick down: gas control, servo HOLDS current position
-        gas_range = 1200 - RC_MIN  # 1200 - 300 = 900
-        # Map full SBUS_MIN..SBUS_MAX to RC_MIN..1200
-        gas_val = RC_MIN + int((clamped - SBUS_MIN) / (SBUS_MAX - SBUS_MIN) * gas_range)
-
-        # Hold servo at current position (don't move it during gas mode)
-        servo_val = current_servo
-        mode = "GAS"
-        return (servo_val, gas_val, mode)
+        # Stick DOWN (SBUS 1173..1811): BRAKE mode, gas off
+        t = (clamped - SPLIT_POINT_SBUS) / (SBUS_MAX - SPLIT_POINT_SBUS)
+        servo_val = SERVO_BRAKE_RELEASED - int(t * (SERVO_BRAKE_RELEASED - SERVO_BRAKE_ENGAGED))
+        return (servo_val, RC_FAILSAFE_GAS, "BRAKE")
 
 
 def crc8_dallas(data: bytes) -> int:
@@ -178,6 +171,7 @@ class RCBridge:
         # Current values
         self.servo_val = RC_FAILSAFE_SERVO
         self.gas_val = RC_FAILSAFE_GAS
+        self.ch3_raw = 0
         self.current_mode = "INIT"
         self.last_valid = time.monotonic()
 
@@ -204,7 +198,7 @@ class RCBridge:
             return
 
         print(f"Bridge active: CH3 split control (boundary: {SPLIT_POINT_SBUS})")
-        print("Stick UP (<992): BRAKE mode | Stick DOWN (>992): GAS mode")
+        print("Stick UP (<992): GAS mode | Stick DOWN (>992): BRAKE mode")
         print("Ctrl+C to stop")
 
         period = 1.0 / STM32_RATE_HZ
@@ -231,13 +225,14 @@ class RCBridge:
 
                     if decoded is not None:
                         if not decoded['failsafe'] and not decoded['lost_frame']:
-                            # Valid frame - use CH3 (index 2)
                             ch3_sbus = decoded['channels'][2]
+                            self.ch3_raw = ch3_sbus
                             self.servo_val, self.gas_val, self.current_mode = sbus_to_split_control(ch3_sbus, self.servo_val)
                             self.last_valid = now
                             self.sbus_ok = True
                         else:
-                            # SBUS failsafe
+                            self.servo_val = RC_FAILSAFE_SERVO
+                            self.gas_val = RC_FAILSAFE_GAS
                             self.sbus_ok = False
                             self.current_mode = "FAILSAFE"
 
@@ -258,8 +253,8 @@ class RCBridge:
                 next_send += period
 
                 # Status print
-                status = "LINK OK" if self.sbus_ok else "FAILSAFE"
-                print(f"Servo: {self.servo_val:4d} | Gas: {self.gas_val:4d} | Mode: {self.current_mode} | {status}", end='\r')
+                link = "LINK OK" if self.sbus_ok else "NO LINK"
+                print(f"CH3_RAW: {self.ch3_raw:4d} | Servo: {self.servo_val:4d} | Gas: {self.gas_val:4d} | Mode: {self.current_mode:<8} | {link}", end='\r')
 
             time.sleep(0.001)
 
