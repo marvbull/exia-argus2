@@ -244,7 +244,7 @@ class RCBridge:
                 # Status print
                 status = "LINK OK" if self.sbus_ok else "FAILSAFE"
                 mode = "GAS" if self.gas_val > RC_FAILSAFE_GAS else "SERVO"
-                print(f"Servo: {self.servo_val:4d} | Gas: {self.gas_val:4d} | Mode: {mode} | {status}", end='\\r')
+                print(f"Servo: {self.servo_val:4d} | Gas: {self.gas_val:4d} | Mode: {mode} | {status}", end='\r')
 
             time.sleep(0.001)
 
@@ -265,7 +265,7 @@ def main():
         print(f"Serial error: {e}")
         sys.exit(1)
     except KeyboardInterrupt:
-        print("\\nStopping...")
+        print("\nStopping...")
     finally:
         if bridge:
             bridge.close()
