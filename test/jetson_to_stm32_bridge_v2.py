@@ -40,16 +40,17 @@ FRAME_SYNC = [0xAA, 0x55]
 SPLIT_POINT_SBUS = 1173        # CH3 stick boundary: below = BRAKE, above = GAS
 
 # Servo (CH1) settings — values are PWM µs, sent directly to STM32
-SERVO_BRAKE_RELEASED = 1700   # brake OFF  → 1700µs PWM
-SERVO_BRAKE_ENGAGED  = 1900   # brake ON   → 1900µs PWM (fully retracted)
-SERVO_HOLD_DEADBAND  = 10     # ±units, suppresses jitter when holding position
+# Physical inversion: 1900µs = rod extended = brake OFF, 1100µs = rod retracted = brake ON
+SERVO_BRAKE_RELEASED = 1400   # brake OFF (rod extended)
+SERVO_BRAKE_ENGAGED  = 1150   # brake ON  (rod retracted)
+SERVO_HOLD_DEADBAND  = 10     # ±µs, suppresses jitter when holding position
 
 # Gas (CH2) settings
 GAS_MIN = 300                 # gas off (motor idle)
 GAS_MAX = 1200                # gas full throttle
 
 # Failsafe values sent on SBUS timeout / invalid frame
-RC_FAILSAFE_SERVO = 1900
+RC_FAILSAFE_SERVO = 1150      # failsafe → brake ON (rod extended = safe)
 RC_FAILSAFE_GAS   = 300
 
 

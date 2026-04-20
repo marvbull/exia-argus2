@@ -41,9 +41,10 @@
 #define HEARTBEAT_MS     250      /* 2 Hz toggle on lost link */
 
 /* PWM servo control — input is µs directly, no RC channel mapping */
-#define PWM_SERVO_MIN_US 1650     /* minimum allowed pulse (brake released) */
-#define PWM_SERVO_MAX_US 1900     /* maximum allowed pulse (brake fully engaged) */
-#define PWM_FAILSAFE_US  1900     /* failsafe → brake fully engaged */
+/* Physical inversion: 1900µs = rod extended = brake OFF, 1100µs = rod retracted = brake ON */
+#define PWM_SERVO_MIN_US 1100     /* minimum allowed pulse (full brake ON) */
+#define PWM_SERVO_MAX_US 1900     /* maximum allowed pulse (brake OFF) */
+#define PWM_FAILSAFE_US  1150     /* failsafe → brake ON */
 #define PWM_PERIOD_US    20000    /* 50 Hz = 20ms period */
 #define PWM_MAX_CCR      999      /* TIM2 counter period */
 /* USER CODE END PD */
