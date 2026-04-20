@@ -50,12 +50,20 @@ GAS_MIN = 300                 # gas off (motor idle)
 GAS_MAX = 1200                # gas full throttle
 
 # Gear servo (CH3 in frame) — values are PWM µs, sent directly to STM32
-GEAR_NEUTRAL_US  = 1500       # neutral
-GEAR_DRIVE_US    = 1800       # drive
-GEAR_REVERSE_US  = 1200       # reverse
-GEAR_FAILSAFE_US = 1500       # failsafe → neutral
+GEAR_NEUTRAL_US  = 1100       # neutral
+GEAR_DRIVE_US    = 1200       # drive
+GEAR_REVERSE_US  = 1300       # reverse
+GEAR_FAILSAFE_US = 1200       # failsafe → neutral
 
 SBUS_BUTTON_HIGH = 1000       # SBUS value above this = button pressed
+
+# Safety interlock: time (seconds) to wait after BRAKE→GAS transition before
+# allowing throttle. Servo must physically travel to BRAKE_RELEASED first.
+BRAKE_RELEASE_DELAY_S = 0.8   # tune to actual servo travel time
+
+# Gear-shift interlock: gas is blocked for this long after any gear change.
+# Braking is NEVER blocked. Tune to actual gear servo travel time.
+GEAR_SHIFT_DELAY_S = 1.0
 
 # Failsafe values sent on SBUS timeout / invalid frame
 RC_FAILSAFE_SERVO = 1150      # failsafe → brake ON
@@ -191,6 +199,13 @@ class RCBridge:
         self._ch7_prev = False
         self._ch8_prev = False
 
+        # Brake-release interlock
+        self._prev_raw_mode = "INIT"
+        self._brake_release_time = 0.0
+
+        # Gear-shift interlock
+        self._gear_shift_time = 0.0
+
     def close(self):
         self.running = False
         if hasattr(self, 'sbus'):
@@ -204,12 +219,19 @@ class RCBridge:
         ch7_now = ch7 > SBUS_BUTTON_HIGH
         ch8_now = ch8 > SBUS_BUTTON_HIGH
 
-        if ch6_now and not self._ch6_prev:
+        # Allow gear shift when brake is at least 30% engaged
+        brake_30pct = SERVO_BRAKE_RELEASED - int(0.3 * (SERVO_BRAKE_RELEASED - SERVO_BRAKE_ENGAGED))
+        brake_full = self.servo_val <= brake_30pct
+
+        if ch6_now and not self._ch6_prev and brake_full:
             self.gear_us, self.gear_name = GEAR_DRIVE_US, "DRIVE"
-        elif ch7_now and not self._ch7_prev:
+            self._gear_shift_time = time.monotonic() + GEAR_SHIFT_DELAY_S
+        elif ch7_now and not self._ch7_prev and brake_full:
             self.gear_us, self.gear_name = GEAR_REVERSE_US, "REVERSE"
-        elif ch8_now and not self._ch8_prev:
+            self._gear_shift_time = time.monotonic() + GEAR_SHIFT_DELAY_S
+        elif ch8_now and not self._ch8_prev and brake_full:
             self.gear_us, self.gear_name = GEAR_NEUTRAL_US, "NEUTRAL"
+            self._gear_shift_time = time.monotonic() + GEAR_SHIFT_DELAY_S
 
         self._ch6_prev = ch6_now
         self._ch7_prev = ch7_now
@@ -260,7 +282,26 @@ class RCBridge:
                         if not decoded['failsafe'] and not decoded['lost_frame']:
                             ch3_sbus = decoded['channels'][2]
                             self.ch3_raw = ch3_sbus
-                            self.servo_val, self.gas_val, self.current_mode = sbus_to_split_control(ch3_sbus, self.servo_val)
+                            self.servo_val, self.gas_val, raw_mode = sbus_to_split_control(ch3_sbus, self.servo_val)
+
+                            # Brake-release interlock: on BRAKE→GAS, block gas until servo travels
+                            if raw_mode == "GAS":
+                                if self._prev_raw_mode == "BRAKE":
+                                    self._brake_release_time = now + BRAKE_RELEASE_DELAY_S
+                                    self.servo_val = SERVO_BRAKE_RELEASED
+                                if now < self._brake_release_time:
+                                    self.gas_val = RC_FAILSAFE_GAS
+                                    self.current_mode = "RELEASING"
+                                elif now < self._gear_shift_time:
+                                    # Gear-shift interlock: block gas, braking always allowed
+                                    self.gas_val = RC_FAILSAFE_GAS
+                                    self.current_mode = "SHIFTING"
+                                else:
+                                    self.current_mode = "GAS"
+                            else:
+                                self.current_mode = raw_mode
+                            self._prev_raw_mode = raw_mode
+
                             self._update_gear(
                                 decoded['channels'][5],
                                 decoded['channels'][6],
