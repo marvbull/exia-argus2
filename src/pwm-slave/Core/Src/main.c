@@ -40,11 +40,17 @@
 #define FAILSAFE_CENTER  1024
 #define HEARTBEAT_MS     250      /* 2 Hz toggle on lost link */
 
-/* PWM servo control — input is µs directly, no RC channel mapping */
+/* PWM brake servo — TIM2 CH1 (PA0), µs direct */
 /* Physical inversion: 1900µs = rod extended = brake OFF, 1100µs = rod retracted = brake ON */
-#define PWM_SERVO_MIN_US 1100     /* minimum allowed pulse (full brake ON) */
-#define PWM_SERVO_MAX_US 1900     /* maximum allowed pulse (brake OFF) */
-#define PWM_FAILSAFE_US  1150     /* failsafe → brake ON */
+#define PWM_SERVO_MIN_US      1100     /* full brake ON */
+#define PWM_SERVO_MAX_US      1900     /* brake OFF */
+#define PWM_FAILSAFE_US       1150     /* failsafe → brake ON */
+
+/* PWM gear servo — TIM2 CH2 (PA1), µs direct */
+#define PWM_GEAR_MIN_US       1100
+#define PWM_GEAR_MAX_US       1900
+#define PWM_GEAR_FAILSAFE_US  1500     /* failsafe → neutral */
+
 #define PWM_PERIOD_US    20000    /* 50 Hz = 20ms period */
 #define PWM_MAX_CCR      999      /* TIM2 counter period */
 /* USER CODE END PD */
@@ -76,7 +82,7 @@ typedef struct {
 
 static rc_state_t rc = {
     .ch1 = PWM_FAILSAFE_US, .ch2 = FAILSAFE_CENTER,
-    .ch3 = FAILSAFE_CENTER, .ch4 = FAILSAFE_CENTER,
+    .ch3 = PWM_GEAR_FAILSAFE_US, .ch4 = FAILSAFE_CENTER,
     .last_frame_tick = 0, .link_ok = 0
 };
 
@@ -103,6 +109,7 @@ static void    rb_push(uint8_t b);
 static int     rb_pop(uint8_t *b);
 static void    parser_feed(uint8_t b);
 static void    update_servo_pwm(uint16_t pulse_us);
+static void    update_gear_pwm(uint16_t pulse_us);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -173,7 +180,8 @@ static void parser_feed(uint8_t b) {
                 rc.ch4 = (uint16_t)payload[6] | ((uint16_t)payload[7] << 8);
                 rc.last_frame_tick = HAL_GetTick();
                 rc.link_ok = 1;
-                update_servo_pwm(rc.ch1);  /* update servo position */
+                update_servo_pwm(rc.ch1);
+                update_gear_pwm(rc.ch3);
             }
             pstate = PS_SYNC1;
         }
@@ -181,13 +189,20 @@ static void parser_feed(uint8_t b) {
     }
 }
 
-/* CH1 value is pulse width in µs, clamped to safe servo range. */
+/* CH1 value is pulse width in µs, clamped to safe brake servo range. */
 static void update_servo_pwm(uint16_t pulse_us) {
     if (pulse_us < PWM_SERVO_MIN_US) pulse_us = PWM_SERVO_MIN_US;
     if (pulse_us > PWM_SERVO_MAX_US) pulse_us = PWM_SERVO_MAX_US;
-
     uint32_t ccr = (pulse_us * (PWM_MAX_CCR + 1)) / PWM_PERIOD_US;
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, ccr);
+}
+
+/* CH3 value is pulse width in µs, clamped to safe gear servo range. */
+static void update_gear_pwm(uint16_t pulse_us) {
+    if (pulse_us < PWM_GEAR_MIN_US) pulse_us = PWM_GEAR_MIN_US;
+    if (pulse_us > PWM_GEAR_MAX_US) pulse_us = PWM_GEAR_MAX_US;
+    uint32_t ccr = (pulse_us * (PWM_MAX_CCR + 1)) / PWM_PERIOD_US;
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, ccr);
 }
 
 /* USER CODE END 0 */
@@ -226,12 +241,14 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_IT(&huart2, &rx_byte, 1);
 
-  /* Start PWM on TIM2 CH1 (PA0) */
+  /* Start PWM on TIM2 CH1 (PA0) brake servo, CH2 (PA1) gear servo */
   extern TIM_HandleTypeDef htim2;
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 
-  /* Set initial failsafe position */
+  /* Set initial failsafe positions */
   update_servo_pwm(PWM_FAILSAFE_US);
+  update_gear_pwm(PWM_GEAR_FAILSAFE_US);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -250,8 +267,10 @@ int main(void)
     if (rc.link_ok && (now - rc.last_frame_tick) > FAILSAFE_MS) {
         rc.link_ok = 0;
         rc.ch1 = PWM_FAILSAFE_US;
-        rc.ch2 = rc.ch3 = rc.ch4 = FAILSAFE_CENTER;
+        rc.ch3 = PWM_GEAR_FAILSAFE_US;
+        rc.ch2 = rc.ch4 = FAILSAFE_CENTER;
         update_servo_pwm(PWM_FAILSAFE_US);
+        update_gear_pwm(PWM_GEAR_FAILSAFE_US);
     }
 
     /* LED: solid on valid link, 2 Hz blink on failsafe */
