@@ -41,7 +41,7 @@ SPLIT_POINT_SBUS = 1173        # CH3 stick boundary: below = BRAKE, above = GAS
 
 # Servo (CH1) settings — values are PWM µs, sent directly to STM32
 # Physical inversion: 1900µs = rod extended = brake OFF, 1100µs = rod retracted = brake ON
-SERVO_BRAKE_RELEASED = 1400   # brake OFF (rod extended)
+SERVO_BRAKE_RELEASED = 1600   # brake OFF (rod extended)
 SERVO_BRAKE_ENGAGED  = 1150   # brake ON  (rod retracted)
 SERVO_HOLD_DEADBAND  = 10     # ±µs, suppresses jitter when holding position
 
@@ -49,8 +49,16 @@ SERVO_HOLD_DEADBAND  = 10     # ±µs, suppresses jitter when holding position
 GAS_MIN = 300                 # gas off (motor idle)
 GAS_MAX = 1200                # gas full throttle
 
+# Gear servo (CH3 in frame) — values are PWM µs, sent directly to STM32
+GEAR_NEUTRAL_US  = 1500       # neutral
+GEAR_DRIVE_US    = 1800       # drive
+GEAR_REVERSE_US  = 1200       # reverse
+GEAR_FAILSAFE_US = 1500       # failsafe → neutral
+
+SBUS_BUTTON_HIGH = 1000       # SBUS value above this = button pressed
+
 # Failsafe values sent on SBUS timeout / invalid frame
-RC_FAILSAFE_SERVO = 1150      # failsafe → brake ON (rod extended = safe)
+RC_FAILSAFE_SERVO = 1150      # failsafe → brake ON
 RC_FAILSAFE_GAS   = 300
 
 
@@ -172,9 +180,16 @@ class RCBridge:
         # Current values
         self.servo_val = RC_FAILSAFE_SERVO
         self.gas_val = RC_FAILSAFE_GAS
+        self.gear_us = GEAR_FAILSAFE_US
+        self.gear_name = "NEUTRAL"
         self.ch3_raw = 0
         self.current_mode = "INIT"
         self.last_valid = time.monotonic()
+
+        # Gear button rising-edge state
+        self._ch6_prev = False
+        self._ch7_prev = False
+        self._ch8_prev = False
 
     def close(self):
         self.running = False
@@ -182,6 +197,23 @@ class RCBridge:
             self.sbus.close()
         if hasattr(self, 'stm32'):
             self.stm32.close()
+
+    def _update_gear(self, ch6: int, ch7: int, ch8: int) -> None:
+        """Rising-edge latch: one press sets the gear, no hold required."""
+        ch6_now = ch6 > SBUS_BUTTON_HIGH
+        ch7_now = ch7 > SBUS_BUTTON_HIGH
+        ch8_now = ch8 > SBUS_BUTTON_HIGH
+
+        if ch6_now and not self._ch6_prev:
+            self.gear_us, self.gear_name = GEAR_DRIVE_US, "DRIVE"
+        elif ch7_now and not self._ch7_prev:
+            self.gear_us, self.gear_name = GEAR_REVERSE_US, "REVERSE"
+        elif ch8_now and not self._ch8_prev:
+            self.gear_us, self.gear_name = GEAR_NEUTRAL_US, "NEUTRAL"
+
+        self._ch6_prev = ch6_now
+        self._ch7_prev = ch7_now
+        self._ch8_prev = ch8_now
 
     def sync_sbus(self):
         """Initial SBUS sync."""
@@ -229,11 +261,18 @@ class RCBridge:
                             ch3_sbus = decoded['channels'][2]
                             self.ch3_raw = ch3_sbus
                             self.servo_val, self.gas_val, self.current_mode = sbus_to_split_control(ch3_sbus, self.servo_val)
+                            self._update_gear(
+                                decoded['channels'][5],
+                                decoded['channels'][6],
+                                decoded['channels'][7],
+                            )
                             self.last_valid = now
                             self.sbus_ok = True
                         else:
                             self.servo_val = RC_FAILSAFE_SERVO
                             self.gas_val = RC_FAILSAFE_GAS
+                            self.gear_us = GEAR_FAILSAFE_US
+                            self.gear_name = "NEUTRAL"
                             self.sbus_ok = False
                             self.current_mode = "FAILSAFE"
 
@@ -244,18 +283,20 @@ class RCBridge:
                 self.sbus_ok = False
                 self.servo_val = RC_FAILSAFE_SERVO
                 self.gas_val = RC_FAILSAFE_GAS
+                self.gear_us = GEAR_FAILSAFE_US
+                self.gear_name = "NEUTRAL"
                 self.current_mode = "TIMEOUT"
 
             # Send to STM32 at 50 Hz
-            # CH1 = servo, CH2 = gas, CH3/4 = unused
+            # CH1 = brake servo, CH2 = gas, CH3 = gear servo
             if now >= next_send:
-                frame = build_stm32_frame(self.servo_val, self.gas_val, 600, 600)
+                frame = build_stm32_frame(self.servo_val, self.gas_val, self.gear_us, 600)
                 self.stm32.write(frame)
                 next_send += period
 
                 # Status print
                 link = "LINK OK" if self.sbus_ok else "NO LINK"
-                print(f"CH3_RAW: {self.ch3_raw:4d} | Servo: {self.servo_val:4d} | Gas: {self.gas_val:4d} | Mode: {self.current_mode:<8} | {link}", end='\r')
+                print(f"CH3_RAW: {self.ch3_raw:4d} | Brake: {self.servo_val:4d} | Gas: {self.gas_val:4d} | Gear: {self.gear_name:<8} | Mode: {self.current_mode:<8} | {link}", end='\r')
 
             time.sleep(0.001)
 
