@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Minimal test: move Waveshare Serial Bus Servo to 3 positions.
-Usage: python3 test_throttle_servo.py --port /dev/ttyACM1
+Usage: python3 test_throttle_servo.py --port /dev/waveshare
 """
 import time
 import argparse
@@ -43,7 +43,7 @@ def move_to(ser, servo_id, position, speed=1500, acc=50):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--port', default='/dev/ttyACM1')
+    parser.add_argument('--port', default='/dev/waveshare')
     parser.add_argument('--id',   default=1, type=int)
     args = parser.parse_args()
 

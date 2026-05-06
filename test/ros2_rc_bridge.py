@@ -41,8 +41,8 @@ class RCBridgeNode(Node):
         super().__init__('rc_bridge')
 
         # Parameters
-        self.declare_parameter('sbus_port', '/dev/ttyUSB0')
-        self.declare_parameter('stm32_port', '/dev/ttyACM0')
+        self.declare_parameter('sbus_port', '/dev/sbus')
+        self.declare_parameter('stm32_port', '/dev/stm32')
         self.declare_parameter('auto_channel', 5)  # CH6 = auto/manual switch
 
         # Publishers

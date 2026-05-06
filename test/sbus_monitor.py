@@ -17,7 +17,7 @@ def decode(frame):
     return raw, fs
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--port', default='/dev/ttyUSB0')
+parser.add_argument('--port', default='/dev/sbus')
 args = parser.parse_args()
 
 ser = serial.Serial(args.port, SBUS_BAUD, bytesize=8, parity='E', stopbits=2, timeout=0.1)

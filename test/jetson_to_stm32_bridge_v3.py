@@ -11,16 +11,16 @@ Throttle (new):
   CH2 (SBUS 172-1811) → Waveshare 30kg Serial Bus Servo position (0-4095)
   Connected via USB-C directly to Jetson (not STM32)
 
-Hardware setup:
-    Herelink SBUS  → FTDI+Inverter → Jetson /dev/ttyUSB0 (100k 8E2)
-    Jetson USB     → STM32 Nucleo  → /dev/ttyACM0 (115k 8N1)
-    Jetson USB-C   → Waveshare Serial Bus Servo Driver Board (default /dev/ttyUSB1)
+Hardware setup (stable symlinks via /etc/udev/rules.d/99-exia-argus.rules):
+    Herelink SBUS  → FTDI+Inverter → /dev/sbus      (100k 8E2)
+    Jetson USB     → STM32 Nucleo  → /dev/stm32     (115k 8N1)
+    Jetson USB-C   → Waveshare Servo Driver         → /dev/waveshare
     STM32 PA0      → Linear Servo signal (brake)
     STM32 PA1      → Gear servo
 
 Usage:
     python3 jetson_to_stm32_bridge_v3.py
-    python3 jetson_to_stm32_bridge_v3.py --throttle-port /dev/ttyUSB2
+    python3 jetson_to_stm32_bridge_v3.py --throttle-port /dev/waveshare
     python3 jetson_to_stm32_bridge_v3.py --no-throttle
 """
 
@@ -76,9 +76,14 @@ RC_FAILSAFE_GAS   = 300
 # ── Waveshare Serial Bus Servo (Feetech SMS/SCS protocol) ────────────────────
 THROTTLE_BAUD        = 1000000   # 1 Mbps — standard for SMS series
 THROTTLE_SERVO_ID    = 1         # default servo ID from factory
-THROTTLE_POS_MIN     = 0         # position at zero throttle
-THROTTLE_POS_MAX     = 4095      # position at full throttle (12-bit)
-THROTTLE_FAILSAFE_POS = 0        # safe position on link loss
+THROTTLE_POS_MIN     = 0         # encoder lower limit (12-bit)
+THROTTLE_POS_MAX     = 4095      # encoder upper limit (12-bit)
+# Mechanically calibrated throttle range (gemessen):
+#   Standgas ≈ 70° → 70/360 * 4096 = 796
+#   Vollgas  ≈ 10° → 10/360 * 4096 = 114
+THROTTLE_POS_IDLE    = 796       # position at zero throttle (~70°)
+THROTTLE_POS_FULL    = 114       # position at full throttle (~10°)
+THROTTLE_FAILSAFE_POS = THROTTLE_POS_IDLE  # safe = idle on link loss
 THROTTLE_RATE_HZ      = 50        # send at same rate as STM32
 THROTTLE_SPEED        = 1500      # steps/s for position moves (0=max speed, but some FW treat 0 as stop)
 THROTTLE_ACC          = 50        # acceleration in 100 steps/s² units
@@ -183,10 +188,13 @@ class ThrottleServo:
 
 
 def gas_val_to_throttle_position(gas_val: int) -> int:
-    """Map gas_val (GAS_MIN=300 .. GAS_MAX=1200) → throttle servo position (0-4095).
-    gas_val=GAS_MIN (brake/failsafe) → 0, gas_val=GAS_MAX (full gas) → 4095."""
+    """Map gas_val (GAS_MIN..GAS_MAX) → throttle servo position.
+    gas_val=GAS_MIN (idle/failsafe) → THROTTLE_POS_IDLE (~70°)
+    gas_val=GAS_MAX (full gas)      → THROTTLE_POS_FULL (~10°)
+    Note: inverted direction — höheres Gas = kleinerer Winkel."""
     t = (gas_val - GAS_MIN) / (GAS_MAX - GAS_MIN)
-    return int(max(0.0, min(1.0, t)) * THROTTLE_POS_MAX)
+    t = max(0.0, min(1.0, t))
+    return int(THROTTLE_POS_IDLE - t * (THROTTLE_POS_IDLE - THROTTLE_POS_FULL))
 
 
 # ── Existing v2 helpers ────────────────────────────────────────────────────────
@@ -509,11 +517,11 @@ def main():
     parser = argparse.ArgumentParser(
         description='SBUS → STM32 RC Bridge v3 (CH3 split + Waveshare throttle servo)',
     )
-    parser.add_argument('--sbus-port',     default='/dev/ttyUSB0',
+    parser.add_argument('--sbus-port',     default='/dev/sbus',
                         help='SBUS input port (Herelink via FTDI, default: %(default)s)')
-    parser.add_argument('--stm32-port',    default='/dev/ttyACM0',
+    parser.add_argument('--stm32-port',    default='/dev/stm32',
                         help='STM32 output port (Nucleo USB, default: %(default)s)')
-    parser.add_argument('--throttle-port', default='/dev/ttyUSB1',
+    parser.add_argument('--throttle-port', default='/dev/waveshare',
                         help='Waveshare Serial Bus Servo USB port (default: %(default)s)')
     parser.add_argument('--throttle-id',   default=THROTTLE_SERVO_ID, type=int,
                         help='Waveshare servo ID (default: %(default)s)')

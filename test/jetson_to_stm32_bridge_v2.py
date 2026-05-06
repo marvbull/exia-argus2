@@ -5,9 +5,9 @@ CH3-based control with split functionality:
   CH3 300-1200: Gas control (output on CH2)
   CH3 1200-1600: Servo control (output on CH1)
 
-Hardware setup:
-    Herelink SBUS → FTDI+Inverter → Jetson /dev/ttyUSB0 (100k 8E2)
-    Jetson USB → STM32 Nucleo /dev/ttyACM0 (115k 8N1)
+Hardware setup (stable symlinks via /etc/udev/rules.d/99-exia-argus.rules):
+    Herelink SBUS → FTDI+Inverter → /dev/sbus  (100k 8E2)
+    Jetson USB → STM32 Nucleo     → /dev/stm32 (115k 8N1)
     STM32 PA0 → Linear Servo signal
     STM32 PA1 → Gas/Motor control (future)
 
@@ -344,9 +344,9 @@ class RCBridge:
 
 def main():
     parser = argparse.ArgumentParser(description='SBUS → STM32 RC Bridge v2 (CH3 split)')
-    parser.add_argument('--sbus-port', default='/dev/ttyUSB0',
+    parser.add_argument('--sbus-port', default='/dev/sbus',
                         help='SBUS input port (Herelink via FTDI)')
-    parser.add_argument('--stm32-port', default='/dev/ttyACM0',
+    parser.add_argument('--stm32-port', default='/dev/stm32',
                         help='STM32 output port (Nucleo USB)')
     args = parser.parse_args()
 
