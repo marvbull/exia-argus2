@@ -4,7 +4,7 @@ import sys
 import fcntl
 import struct
 
-PORT = '/dev/ttyUSB0'
+PORT = '/dev/sbus'
 BAUD = 100000
 
 def force_custom_baud(fd, baud):

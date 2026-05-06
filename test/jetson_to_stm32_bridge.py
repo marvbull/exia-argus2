@@ -3,14 +3,14 @@
 Jetson → STM32 RC Bridge
 Reads SBUS from Herelink via FTDI inverter, forwards to STM32 PWM slave.
 
-Hardware setup:
-    Herelink SBUS → FTDI+Inverter → Jetson /dev/ttyUSB0 (100k 8E2)
-    Jetson USB → STM32 Nucleo /dev/ttyACM0 (115k 8N1)
+Hardware setup (stable symlinks via /etc/udev/rules.d/99-exia-argus.rules):
+    Herelink SBUS → FTDI+Inverter → /dev/sbus  (100k 8E2)
+    Jetson USB → STM32 Nucleo     → /dev/stm32 (115k 8N1)
     STM32 PA0 → Linear Servo signal
 
 Usage:
     python3 jetson_to_stm32_bridge.py
-    python3 jetson_to_stm32_bridge.py --sbus-port /dev/ttyUSB1 --stm32-port /dev/ttyACM1
+    python3 jetson_to_stm32_bridge.py --sbus-port /dev/sbus --stm32-port /dev/stm32
 """
 
 import sys
@@ -160,7 +160,7 @@ class RCBridge:
         frame = sync_to_sbus_frame(self.sbus)
         if frame is None:
             print("ERROR: No SBUS frames found!")
-            print("Check: Herelink → FTDI → /dev/ttyUSB0, hardware inverter")
+            print("Check: Herelink → FTDI → /dev/sbus, hardware inverter")
             return False
         print("SBUS sync OK!")
         return True
@@ -235,9 +235,9 @@ class RCBridge:
 
 def main():
     parser = argparse.ArgumentParser(description='SBUS → STM32 RC Bridge')
-    parser.add_argument('--sbus-port', default='/dev/ttyUSB0',
+    parser.add_argument('--sbus-port', default='/dev/sbus',
                         help='SBUS input port (Herelink via FTDI)')
-    parser.add_argument('--stm32-port', default='/dev/ttyACM0',
+    parser.add_argument('--stm32-port', default='/dev/stm32',
                         help='STM32 output port (Nucleo USB)')
     args = parser.parse_args()
 
