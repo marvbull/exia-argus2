@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 1
 
 
    1              		.cpu cortex-m4
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
   27:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****     (+) Each Exti line can be configured within this driver.
   28:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** 
   29:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****     (+) Exti line can be configured in 3 different modes
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 2
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 2
 
 
   30:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****         (++) Interrupt
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
   84:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** 
   85:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** /* Includes ------------------------------------------------------------------*/
   86:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** #include "stm32f4xx_hal.h"
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 3
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 3
 
 
   87:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** 
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  141:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****   */
  142:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** HAL_StatusTypeDef HAL_EXTI_SetConfigLine(EXTI_HandleTypeDef *hexti, EXTI_ConfigTypeDef *pExtiConfig
  143:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** {
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 4
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 4
 
 
   30              		.loc 1 143 1 view -0
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
   63 0012 0120     		movs	r0, #1
   64              	.LVL2:
   65              		.loc 1 163 12 view .LVU17
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 5
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 5
 
 
   66 0014 9040     		lsls	r0, r0, r2
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
   98              	.L7:
  186:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****     }
  187:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****     else
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 6
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 6
 
 
  188:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****     {
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  219:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****   if ((pExtiConfig->Mode & EXTI_MODE_EVENT) != 0x00u)
  122              		.loc 1 219 3 is_stmt 1 view .LVU40
  123              		.loc 1 219 19 is_stmt 0 view .LVU41
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 7
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 7
 
 
  124 0068 4B68     		ldr	r3, [r1, #4]
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  161              		.loc 1 196 7 is_stmt 1 view .LVU54
  197:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** 
  162              		.loc 1 197 7 view .LVU55
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 8
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 8
 
 
  199:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****       regval &= ~(SYSCFG_EXTICR1_EXTI0 << (SYSCFG_EXTICR1_EXTI1_Pos * (linepos & 0x03u)));
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  201              		.loc 1 214 15 view .LVU71
  202 00d0 23EA0003 		bic	r3, r3, r0
  203 00d4 1360     		str	r3, [r2]
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 9
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 9
 
 
  204 00d6 C7E7     		b	.L9
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  252              	.LVL18:
  253              	.LFB135:
  230:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** 
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 10
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 10
 
 
  231:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** /**
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  281              	.LVL19:
  257:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****   maskline = (1uL << linepos);
  282              		.loc 1 257 3 is_stmt 1 view .LVU95
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 11
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 11
 
 
  283              		.loc 1 257 12 is_stmt 0 view .LVU96
@@ -658,7 +658,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  315              		.loc 1 279 3 is_stmt 1 view .LVU109
  316              		.loc 1 279 24 is_stmt 0 view .LVU110
  317 0038 0022     		movs	r2, #0
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 12
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 12
 
 
  318 003a 8A60     		str	r2, [r1, #8]
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  299:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****     if ((pExtiConfig->Line & EXTI_GPIO) == EXTI_GPIO)
  353              		.loc 1 299 5 is_stmt 1 view .LVU126
  354              		.loc 1 299 28 is_stmt 0 view .LVU127
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 13
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 13
 
 
  355 0060 0CF0C063 		and	r3, ip, #100663296
@@ -778,7 +778,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  304:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****     }
  389              		.loc 1 304 28 view .LVU141
  390 008e CB60     		str	r3, [r1, #12]
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 14
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 14
 
 
  391              		.loc 1 308 10 view .LVU142
@@ -838,7 +838,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  314:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****   * @retval HAL Status.
  315:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****   */
  316:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** HAL_StatusTypeDef HAL_EXTI_ClearConfigLine(EXTI_HandleTypeDef *hexti)
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 15
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 15
 
 
  317:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** {
@@ -898,7 +898,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  471 0016 1168     		ldr	r1, [r2]
  472              		.loc 1 336 28 view .LVU164
  473 0018 6FEA030E 		mvn	lr, r3
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 16
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 16
 
 
  474              		.loc 1 336 26 view .LVU165
@@ -958,7 +958,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  351:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** 
  352:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****       regval = SYSCFG->EXTICR[linepos >> 2u];
  353:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****       regval &= ~(SYSCFG_EXTICR1_EXTI0 << (SYSCFG_EXTICR1_EXTI1_Pos * (linepos & 0x03u)));
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 17
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 17
 
 
  354:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****       SYSCFG->EXTICR[linepos >> 2u] = regval;
@@ -1018,7 +1018,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  551              	.L40:
  552              		.cfi_def_cfa_offset 0
  553              		.cfi_restore 4
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 18
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 18
 
 
  554              		.cfi_restore 14
@@ -1078,7 +1078,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  596              		.loc 1 370 1 is_stmt 0 view .LVU207
  597 0000 0346     		mov	r3, r0
  371:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****   HAL_StatusTypeDef status = HAL_OK;
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 19
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 19
 
 
  598              		.loc 1 371 3 is_stmt 1 view .LVU208
@@ -1138,7 +1138,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  630              		.loc 1 395 1 is_stmt 1 view -0
  631              		.cfi_startproc
  632              		@ args = 0, pretend = 0, frame = 0
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 20
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 20
 
 
  633              		@ frame_needed = 0, uses_anonymous_args = 0
@@ -1198,7 +1198,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  416:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** 
  417:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** /** @addtogroup EXTI_Exported_Functions_Group2
  418:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****   *  @brief EXTI IO functions.
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 21
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 21
 
 
  419:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****   *
@@ -1258,7 +1258,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  696 0012 04D0     		beq	.L56
  445:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****   {
  446:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****     /* Clear pending bit */
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 22
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 22
 
 
  447:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c ****     EXTI->PR = maskline;
@@ -1318,7 +1318,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  732              		.loc 1 467 1 is_stmt 1 view -0
  733              		.cfi_startproc
  734              		@ args = 0, pretend = 0, frame = 0
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 23
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 23
 
 
  735              		@ frame_needed = 0, uses_anonymous_args = 0
@@ -1378,7 +1378,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  769              		.loc 1 487 1 view .LVU267
  770 0012 7047     		bx	lr
  771              	.L63:
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 24
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 24
 
 
  772              		.align	2
@@ -1438,7 +1438,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  804 0006 0123     		movs	r3, #1
  805 0008 9340     		lsls	r3, r3, r2
  806              	.LVL69:
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 25
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 25
 
 
  512:Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c **** 
@@ -1498,7 +1498,7 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  843              		.loc 1 531 12 view .LVU288
  844 0006 0123     		movs	r3, #1
  845 0008 9340     		lsls	r3, r3, r2
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 26
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 26
 
 
  846              	.LVL71:
@@ -1525,35 +1525,35 @@ ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 1
  864              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f401xe.h"
  865              		.file 5 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
  866              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_exti.h"
-ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s 			page 27
+ARM GAS  C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s 			page 27
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 stm32f4xx_hal_exti.c
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:21     .text.HAL_EXTI_SetConfigLine:00000000 $t
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:27     .text.HAL_EXTI_SetConfigLine:00000000 HAL_EXTI_SetConfigLine
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:239    .text.HAL_EXTI_SetConfigLine:000000f0 $d
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:245    .text.HAL_EXTI_GetConfigLine:00000000 $t
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:251    .text.HAL_EXTI_GetConfigLine:00000000 HAL_EXTI_GetConfigLine
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:423    .text.HAL_EXTI_GetConfigLine:000000a0 $d
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:429    .text.HAL_EXTI_ClearConfigLine:00000000 $t
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:435    .text.HAL_EXTI_ClearConfigLine:00000000 HAL_EXTI_ClearConfigLine
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:576    .text.HAL_EXTI_ClearConfigLine:00000084 $d
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:582    .text.HAL_EXTI_RegisterCallback:00000000 $t
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:588    .text.HAL_EXTI_RegisterCallback:00000000 HAL_EXTI_RegisterCallback
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:621    .text.HAL_EXTI_GetHandle:00000000 $t
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:627    .text.HAL_EXTI_GetHandle:00000000 HAL_EXTI_GetHandle
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:659    .text.HAL_EXTI_IRQHandler:00000000 $t
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:665    .text.HAL_EXTI_IRQHandler:00000000 HAL_EXTI_IRQHandler
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:718    .text.HAL_EXTI_IRQHandler:00000020 $d
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:723    .text.HAL_EXTI_GetPending:00000000 $t
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:729    .text.HAL_EXTI_GetPending:00000000 HAL_EXTI_GetPending
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:774    .text.HAL_EXTI_GetPending:00000014 $d
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:779    .text.HAL_EXTI_ClearPending:00000000 $t
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:785    .text.HAL_EXTI_ClearPending:00000000 HAL_EXTI_ClearPending
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:816    .text.HAL_EXTI_ClearPending:00000010 $d
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:821    .text.HAL_EXTI_GenerateSWI:00000000 $t
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:827    .text.HAL_EXTI_GenerateSWI:00000000 HAL_EXTI_GenerateSWI
-C:\Users\bulli\AppData\Local\Temp\ccuseY6b.s:856    .text.HAL_EXTI_GenerateSWI:00000010 $d
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:21     .text.HAL_EXTI_SetConfigLine:00000000 $t
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:27     .text.HAL_EXTI_SetConfigLine:00000000 HAL_EXTI_SetConfigLine
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:239    .text.HAL_EXTI_SetConfigLine:000000f0 $d
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:245    .text.HAL_EXTI_GetConfigLine:00000000 $t
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:251    .text.HAL_EXTI_GetConfigLine:00000000 HAL_EXTI_GetConfigLine
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:423    .text.HAL_EXTI_GetConfigLine:000000a0 $d
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:429    .text.HAL_EXTI_ClearConfigLine:00000000 $t
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:435    .text.HAL_EXTI_ClearConfigLine:00000000 HAL_EXTI_ClearConfigLine
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:576    .text.HAL_EXTI_ClearConfigLine:00000084 $d
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:582    .text.HAL_EXTI_RegisterCallback:00000000 $t
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:588    .text.HAL_EXTI_RegisterCallback:00000000 HAL_EXTI_RegisterCallback
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:621    .text.HAL_EXTI_GetHandle:00000000 $t
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:627    .text.HAL_EXTI_GetHandle:00000000 HAL_EXTI_GetHandle
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:659    .text.HAL_EXTI_IRQHandler:00000000 $t
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:665    .text.HAL_EXTI_IRQHandler:00000000 HAL_EXTI_IRQHandler
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:718    .text.HAL_EXTI_IRQHandler:00000020 $d
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:723    .text.HAL_EXTI_GetPending:00000000 $t
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:729    .text.HAL_EXTI_GetPending:00000000 HAL_EXTI_GetPending
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:774    .text.HAL_EXTI_GetPending:00000014 $d
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:779    .text.HAL_EXTI_ClearPending:00000000 $t
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:785    .text.HAL_EXTI_ClearPending:00000000 HAL_EXTI_ClearPending
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:816    .text.HAL_EXTI_ClearPending:00000010 $d
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:821    .text.HAL_EXTI_GenerateSWI:00000000 $t
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:827    .text.HAL_EXTI_GenerateSWI:00000000 HAL_EXTI_GenerateSWI
+C:\Users\bulli\AppData\Local\Temp\ccMPkLbw.s:856    .text.HAL_EXTI_GenerateSWI:00000010 $d
 
 NO UNDEFINED SYMBOLS
