@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
 """
 Jetson → STM32 RC Bridge v3
-All v2 features preserved + Waveshare Serial Bus Servo throttle control via USB-C.
+All v2 features preserved + Waveshare throttle servo + Phidget steering motor.
 
-CH3-based control with split functionality:
-  CH3 300-1200: Gas control (output on CH2)
-  CH3 1200-1600: Servo control (output on CH1)
+CH3-based split control:
+  CH3 stick UP   : Gas control (CH2 to STM32 + Waveshare throttle servo)
+  CH3 stick DOWN : Brake servo (CH1 PWM to STM32)
 
-Throttle (new):
-  CH2 (SBUS 172-1811) → Waveshare 30kg Serial Bus Servo position (0-4095)
-  Connected via USB-C directly to Jetson (not STM32)
+CH1 (steering): SBUS 172..1811 → Phidget MotorPositionController ±MAX_STEER_DEG
+  Phidget DCC1000 + HKT22 encoder via VINT Hub (USB)
 
 Hardware setup (stable symlinks via /etc/udev/rules.d/99-exia-argus.rules):
     Herelink SBUS  → FTDI+Inverter → /dev/sbus      (100k 8E2)
     Jetson USB     → STM32 Nucleo  → /dev/stm32     (115k 8N1)
     Jetson USB-C   → Waveshare Servo Driver         → /dev/waveshare
+    Jetson USB     → Phidget VINT Hub → DCC1000 (steering motor) on Hub-Port 3
     STM32 PA0      → Linear Servo signal (brake)
     STM32 PA1      → Gear servo
 
 Usage:
     python3 jetson_to_stm32_bridge_v3.py
-    python3 jetson_to_stm32_bridge_v3.py --throttle-port /dev/waveshare
     python3 jetson_to_stm32_bridge_v3.py --no-throttle
+    python3 jetson_to_stm32_bridge_v3.py --no-steering
+    python3 jetson_to_stm32_bridge_v3.py --max-steer-deg 500
 """
 
 import sys
@@ -30,6 +31,13 @@ import struct
 import argparse
 import serial
 from typing import Optional, Tuple
+
+try:
+    from Phidget22.Devices.MotorPositionController import MotorPositionController
+    from Phidget22.PhidgetException import PhidgetException
+    PHIDGET_AVAILABLE = True
+except ImportError:
+    PHIDGET_AVAILABLE = False
 
 # ── SBUS config ───────────────────────────────────────────────────────────────
 SBUS_BAUD       = 100000
@@ -197,6 +205,97 @@ def gas_val_to_throttle_position(gas_val: int) -> int:
     return int(THROTTLE_POS_IDLE - t * (THROTTLE_POS_IDLE - THROTTLE_POS_FULL))
 
 
+# ── Phidget Steering Motor (DCC1000 + HKT22) ─────────────────────────────────
+STEERING_HUB_PORT       = 3
+STEERING_ENCODER_PPR    = 300
+STEERING_QUADRATURE     = 4
+STEERING_GEARBOX_1      = 4.25
+STEERING_GEARBOX_2      = 76 / 13
+STEERING_RESCALE_FACTOR = -360.0 / (
+    STEERING_ENCODER_PPR * STEERING_QUADRATURE *
+    STEERING_GEARBOX_1 * STEERING_GEARBOX_2
+)
+STEERING_MAX_DEG        = 1750.0   # absoluter Lenkanschlag (Sicherheitslimit)
+STEERING_DEFAULT_RANGE  = 200.0    # ±deg bei Stick voll, kleiner = ruhiger
+STEERING_VELOCITY_LIMIT = 400.0
+STEERING_ACCELERATION   = 1200.0
+STEERING_CURRENT_LIMIT  = 10.0
+STEERING_DEAD_BAND      = 3.0
+STEERING_KP             = 400.0
+STEERING_KI             = 0.0
+STEERING_KD             = 250.0
+STEERING_ATTACH_TO_MS   = 5000
+
+
+class SteeringMotor:
+    """Phidget DCC1000 with hardware position PID — steering actuator."""
+
+    def __init__(self, hub_port: int = STEERING_HUB_PORT):
+        if not PHIDGET_AVAILABLE:
+            raise RuntimeError("Phidget22 library not installed (pip install Phidget22)")
+
+        self.hub_port    = hub_port
+        self.target_deg  = 0.0
+        self.position    = 0.0
+
+        print(f"Opening Steering Motor: Phidget DCC1000 on Hub-Port {hub_port}")
+        m = MotorPositionController()
+        m.setHubPort(hub_port)
+        m.setIsHubPortDevice(False)
+        m.openWaitForAttachment(STEERING_ATTACH_TO_MS)
+
+        m.setRescaleFactor(STEERING_RESCALE_FACTOR)
+        m.setCurrentLimit(STEERING_CURRENT_LIMIT)
+        m.setVelocityLimit(STEERING_VELOCITY_LIMIT)
+        m.setAcceleration(STEERING_ACCELERATION)
+        m.setDeadBand(STEERING_DEAD_BAND)
+        m.setKp(STEERING_KP)
+        m.setKi(STEERING_KI)
+        m.setKd(STEERING_KD)
+
+        try:
+            m.addPositionOffset(-m.getPosition())   # aktuelle Position = 0°
+        except PhidgetException:
+            pass
+
+        m.setEngaged(True)
+        time.sleep(0.2)
+        self._m = m
+        print(f"Steering Motor: engaged, position referenced to 0°")
+
+    def send_target(self, deg: float) -> None:
+        deg = max(-STEERING_MAX_DEG, min(STEERING_MAX_DEG, deg))
+        self.target_deg = deg
+        try:
+            self._m.setTargetPosition(deg)
+            self.position = self._m.getPosition()
+        except PhidgetException as e:
+            print(f"\n[Steering Phidget error] {e}")
+
+    def failsafe(self) -> None:
+        self.send_target(0.0)
+
+    def close(self) -> None:
+        try:
+            self._m.setTargetPosition(0.0)
+            time.sleep(0.2)
+            self._m.setEngaged(False)
+            self._m.close()
+        except Exception:
+            pass
+
+
+def ch1_to_steering_deg(ch1: int, max_deg: float, invert: bool = False) -> float:
+    """SBUS CH1 (172..1811) → ±max_deg, Mitte 992 → 0°."""
+    ch1 = max(SBUS_MIN, min(SBUS_MAX, ch1))
+    centered = ch1 - SBUS_MID
+    half_range = max(SBUS_MAX - SBUS_MID, SBUS_MID - SBUS_MIN)
+    normalized = centered / half_range
+    if invert:
+        normalized = -normalized
+    return normalized * max_deg
+
+
 # ── Existing v2 helpers ────────────────────────────────────────────────────────
 
 def sbus_to_split_control(sbus_val: int, current_servo: int) -> Tuple[int, int, str]:
@@ -298,7 +397,11 @@ class RCBridge:
     def __init__(self, sbus_port: str, stm32_port: str,
                  throttle_port: Optional[str] = None,
                  throttle_servo_id: int = THROTTLE_SERVO_ID,
-                 throttle_baud: int = THROTTLE_BAUD):
+                 throttle_baud: int = THROTTLE_BAUD,
+                 steering_enabled: bool = True,
+                 steering_hub_port: int = STEERING_HUB_PORT,
+                 steering_max_deg: float = STEERING_DEFAULT_RANGE,
+                 steering_invert: bool = False):
         self.running = False
         self.sbus_ok = False
 
@@ -324,14 +427,26 @@ class RCBridge:
             except serial.SerialException as e:
                 print(f"WARNING: Throttle servo unavailable ({e}) — continuing without it")
 
+        # Optional steering motor (Phidget DCC1000 + HKT22)
+        self.steering: Optional[SteeringMotor] = None
+        self.steering_max_deg = steering_max_deg
+        self.steering_invert  = steering_invert
+        if steering_enabled:
+            try:
+                self.steering = SteeringMotor(hub_port=steering_hub_port)
+            except Exception as e:
+                print(f"WARNING: Steering motor unavailable ({e}) — continuing without it")
+
         # Current values
         self.servo_val   = RC_FAILSAFE_SERVO
         self.gas_val     = RC_FAILSAFE_GAS
         self.gear_us     = GEAR_FAILSAFE_US
         self.gear_name   = "NEUTRAL"
 
+        self.ch1_raw     = SBUS_MID
         self.ch3_raw     = 0
-        self.throttle_pos = THROTTLE_FAILSAFE_POS
+        self.throttle_pos  = THROTTLE_FAILSAFE_POS
+        self.steering_deg  = 0.0
         self.current_mode = "INIT"
         self.last_valid  = time.monotonic()
 
@@ -351,6 +466,8 @@ class RCBridge:
         self.running = False
         if self.throttle:
             self.throttle.close()
+        if self.steering:
+            self.steering.close()
         if hasattr(self, 'sbus'):
             self.sbus.close()
         if hasattr(self, 'stm32'):
@@ -394,6 +511,11 @@ class RCBridge:
         if self.throttle:
             self.throttle.failsafe()
 
+    def _apply_steering_failsafe(self) -> None:
+        self.steering_deg = 0.0
+        if self.steering:
+            self.steering.failsafe()
+
     def bridge_loop(self):
         """Main bridge loop."""
         if not self.sync_sbus():
@@ -429,8 +551,15 @@ class RCBridge:
 
                     if decoded is not None:
                         if not decoded['failsafe'] and not decoded['lost_frame']:
+                            ch1_sbus = decoded['channels'][0]
                             ch3_sbus = decoded['channels'][2]
+                            self.ch1_raw = ch1_sbus
                             self.ch3_raw = ch3_sbus
+
+                            # CH1 → Phidget steering motor target (deg)
+                            self.steering_deg = ch1_to_steering_deg(
+                                ch1_sbus, self.steering_max_deg, self.steering_invert
+                            )
 
                             # CH3 → brake servo + gas (split control)
                             self.servo_val, self.gas_val, raw_mode = \
@@ -473,6 +602,7 @@ class RCBridge:
                             self.gear_us    = GEAR_FAILSAFE_US
                             self.gear_name  = "NEUTRAL"
                             self._apply_throttle_failsafe()
+                            self._apply_steering_failsafe()
                             self.sbus_ok    = False
                             self.current_mode = "FAILSAFE"
 
@@ -486,6 +616,7 @@ class RCBridge:
                 self.gear_us   = GEAR_FAILSAFE_US
                 self.gear_name = "NEUTRAL"
                 self._apply_throttle_failsafe()
+                self._apply_steering_failsafe()
                 self.current_mode = "TIMEOUT"
 
             # ── Send at 50 Hz ─────────────────────────────────────────────────
@@ -498,15 +629,22 @@ class RCBridge:
                 if self.throttle and self.sbus_ok:
                     self.throttle.send_position(self.throttle_pos)
 
+                # Phidget steering motor (always send — even at 0° during failsafe)
+                if self.steering:
+                    self.steering.send_target(self.steering_deg)
+
                 next_send += period
 
                 # Status line
                 link         = "LINK OK" if self.sbus_ok else "NO LINK"
-                throttle_str = f"Throttle: {self.throttle_pos:4d}" if self.throttle else "Throttle: N/A"
+                throttle_str = f"Throt:{self.throttle_pos:4d}" if self.throttle else "Throt:N/A "
+                steering_str = (f"Steer:{self.steering_deg:+6.1f}°" if self.steering
+                                else "Steer:N/A   ")
                 print(
-                    f"CH3: {self.ch3_raw:4d} | Brake: {self.servo_val:4d} | Gas: {self.gas_val:4d} | "
-                    f"Gear: {self.gear_name:<8} | {throttle_str} | "
-                    f"Mode: {self.current_mode:<9} | {link}",
+                    f"CH1:{self.ch1_raw:4d} CH3:{self.ch3_raw:4d} | "
+                    f"Brake:{self.servo_val:4d} Gas:{self.gas_val:4d} | "
+                    f"Gear:{self.gear_name:<7} | {throttle_str} | {steering_str} | "
+                    f"{self.current_mode:<9} | {link}",
                     end='\r',
                 )
 
@@ -529,6 +667,14 @@ def main():
                         help='Waveshare servo baud rate (default: %(default)s, try 115200 or 500000)')
     parser.add_argument('--no-throttle',   action='store_true',
                         help='Disable Waveshare throttle servo entirely')
+    parser.add_argument('--no-steering',   action='store_true',
+                        help='Disable Phidget steering motor entirely')
+    parser.add_argument('--steering-hub-port', default=STEERING_HUB_PORT, type=int,
+                        help='Phidget VINT Hub port for DCC1000 (default: %(default)s)')
+    parser.add_argument('--max-steer-deg', default=STEERING_DEFAULT_RANGE, type=float,
+                        help='Steering range at full stick deflection in degrees (default: %(default)s)')
+    parser.add_argument('--steering-invert', action='store_true',
+                        help='Invert steering direction')
     args = parser.parse_args()
 
     throttle_port = None if args.no_throttle else args.throttle_port
@@ -541,6 +687,10 @@ def main():
             throttle_port=throttle_port,
             throttle_servo_id=args.throttle_id,
             throttle_baud=args.throttle_baud,
+            steering_enabled=not args.no_steering,
+            steering_hub_port=args.steering_hub_port,
+            steering_max_deg=args.max_steer_deg,
+            steering_invert=args.steering_invert,
         )
         bridge.bridge_loop()
     except serial.SerialException as e:
