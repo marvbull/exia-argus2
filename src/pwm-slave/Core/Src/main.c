@@ -46,10 +46,11 @@
 #define PWM_SERVO_MAX_US      1900     /* brake OFF */
 #define PWM_FAILSAFE_US       1150     /* failsafe → brake ON */
 
-/* PWM gear servo — TIM2 CH2 (PA1), µs direct */
+/* PWM gear servo — TIM2 CH2 (PA1), µs direct (mechanisch kalibriert) */
+/*   NEUTRAL = 1375µs, DRIVE = 1450µs, REVERSE = 1300µs */
 #define PWM_GEAR_MIN_US       1100
 #define PWM_GEAR_MAX_US       1900
-#define PWM_GEAR_FAILSAFE_US  1500     /* failsafe → neutral */
+#define PWM_GEAR_FAILSAFE_US  1375     /* failsafe → NEUTRAL (kalibriert) */
 
 #define PWM_PERIOD_US    20000    /* 50 Hz = 20ms period */
 #define PWM_MAX_CCR      999      /* TIM2 counter period */

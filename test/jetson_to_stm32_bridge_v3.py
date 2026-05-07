@@ -65,11 +65,11 @@ SERVO_HOLD_DEADBAND  = 10
 GAS_MIN = 300
 GAS_MAX = 1200
 
-# Gear servo (CH3 in STM32 frame) — PWM µs
-GEAR_NEUTRAL_US  = 1100
-GEAR_DRIVE_US    = 1200
+# Gear servo (CH3 in STM32 frame) — PWM µs (mechanisch kalibriert)
+GEAR_NEUTRAL_US  = 1375
+GEAR_DRIVE_US    = 1450
 GEAR_REVERSE_US  = 1300
-GEAR_FAILSAFE_US = 1200
+GEAR_FAILSAFE_US = 1375   # = NEUTRAL bei Failsafe
 
 SBUS_BUTTON_HIGH = 1000   # SBUS value above this = button pressed
 
@@ -216,14 +216,14 @@ STEERING_RESCALE_FACTOR = -360.0 / (
     STEERING_GEARBOX_1 * STEERING_GEARBOX_2
 )
 STEERING_MAX_DEG        = 1750.0   # absoluter Lenkanschlag (Sicherheitslimit)
-STEERING_DEFAULT_RANGE  = 200.0    # ±deg bei Stick voll, kleiner = ruhiger
-STEERING_VELOCITY_LIMIT = 400.0
-STEERING_ACCELERATION   = 1200.0
-STEERING_CURRENT_LIMIT  = 10.0
-STEERING_DEAD_BAND      = 3.0
-STEERING_KP             = 400.0
+STEERING_DEFAULT_RANGE  = 450.0    # ±deg bei Stick voll, kleiner = ruhiger
+STEERING_VELOCITY_LIMIT = 1500.0   # zackige Reaktion
+STEERING_ACCELERATION   = 5000.0   # schnelles Hochfahren auf Velocity
+STEERING_CURRENT_LIMIT  = 15.0     # mehr Drehmoment beim Lenken
+STEERING_DEAD_BAND      = 2.0      # kleinere Toleranz → näher am Ziel, kein "Bremsen" früh
+STEERING_KP             = 450.0    # etwas mehr P → snappiger
 STEERING_KI             = 0.0
-STEERING_KD             = 250.0
+STEERING_KD             = 200.0    # weniger Dämpfung als vorher → weniger Verzögerung
 STEERING_ATTACH_TO_MS   = 5000
 
 
